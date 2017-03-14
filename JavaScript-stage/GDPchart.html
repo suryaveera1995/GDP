@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+    <h1> Chart for GDP </h1>
+     <link rel="stylesheet"  href="css/population.css">
+</head>
+
+
+<body>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+    <script>
+    var margin = {
+            top: 20,
+            right: 30,
+            bottom: 50,
+            left: 80
+        },
+        width = 1350 - margin.left - margin.right,
+        height = 550 - margin.top - margin.bottom;
+
+
+    var formatPercent = d3.format("");
+
+    var x = d3.scale.ordinal()
+        .rangeRoundBands([0, width], .2);
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+
+    var tip = d3.tip()
+        .attr('class', 'd3-tip')
+        .offset([-10, 0])
+        .html(function(d) {
+            return "<strong>GDP:</strong> <span style='color:red'>" + d.GDP + "</span>";
+        })
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    svg.call(tip);
+
+    d3.json("json/GDP.json", function(error, data) {
+        x.domain(data.map(function(d) {
+            return d.country;
+        }));
+        y.domain([0, d3.max(data, function(d) {
+            return d.GDP > 20000 ? d.GDP : 20000
+        })]);
+
+
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
+
+        svg.append("text")
+            .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
+            .style("text-anchor", "middle")
+            .style("font-size", "15px")
+            .text("Countries");
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis);
+
+        svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left)
+            .attr("x", 0 - (height / 2))
+            .attr("dy", "2em")
+            .style("text-anchor", "end")
+            .style("font-size", "15px")
+            .text("GDP");
+
+        svg.selectAll(".bar")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", function(d) {
+                return x(d.country);
+            })
+            .attr("width", x.rangeBand())
+            .attr("y", function(d) {
+                return y(d.GDP);
+            })
+            .attr("height", function(d) {
+                return height - y(d.GDP);
+            })
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide)
+
+    });
+
+    function foreach(d) {
+
+        d.GDP = +d.GDP;
+        return d;
+
+    }
+    </script>
